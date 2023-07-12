@@ -1,17 +1,14 @@
+# -*- coding: utf-8 -*-
 import sys, nncam
-# import serial
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QTimer, QSignalBlocker, QIODevice,Qt
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QTimer, QSignalBlocker, QIODevice, Qt
 from PyQt5.QtGui import QPixmap, QImage
-from PyQt5.QtWidgets import QLabel, QApplication, QWidget, QDesktopWidget, QCheckBox, QMessageBox, QMainWindow, QPushButton, QComboBox, QSlider, QGroupBox, QGridLayout, QBoxLayout, QHBoxLayout, QVBoxLayout, QMenu, QAction, QTextEdit
+from PyQt5.QtWidgets import QLabel, QApplication, QWidget, QDesktopWidget, QCheckBox, QMessageBox, QMainWindow, QPushButton, QComboBox, QSlider, QGroupBox, QGridLayout, QBoxLayout, QHBoxLayout, QVBoxLayout, QMenu, QAction,QTextBrowser,QTabWidget,QTextEdit
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from serial.tools import list_ports
 
-class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
-
-    #ÉùÃ÷Ò»¸ö´øintÀàĞÍ²ÎÊıµÄĞÅºÅ
+class MainWindow(QMainWindow):
     evtCallback = pyqtSignal(int)
 
-    #pythonÊ¹ÓÃº¯Êı"staticmethod()"»ò"@ staticmethod"Ö¸ÁîµÄ·½·¨°ÑÆÕÍ¨µÄº¯Êı×ª»»Îª¾²Ì¬·½·¨¡£¾²Ì¬·½·¨Ïàµ±ÓÚÈ«¾Öº¯Êı
     @staticmethod
     def makeLayout(lbl_1, sli_1, val_1, lbl_2, sli_2, val_2):
         hlyt_1 = QHBoxLayout()
@@ -29,11 +26,26 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         vlyt.addWidget(sli_2)
         return vlyt
 
-    #¹¹Ôì·½·¨__init__ÓÃÓÚ´´½¨ÊµÀı¶ÔÏóÊ±Ê¹ÓÃ£¬Ã¿µ±´´½¨Ò»¸öÀàµÄÊµÀı¶ÔÏóÊ±£¬Python ½âÊÍÆ÷¶¼»á×Ô¶¯µ÷ÓÃËü£¬ÓÃÀ´³õÊ¼»¯¶ÔÏóµÄÄ³Ğ©ÊôĞÔ
     def __init__(self):
-        super().__init__()#MainWindow¼Ì³ĞQMainWindow£¬Òò´Ë´Ë´¦__init__Ö´ĞĞµÄÊÇQMainWindowµÄ
-        self.setWindowTitle("apptest")
-        self.setMinimumSize(1024, 568)
+        super().__init__()
+        self.setMinimumSize(1024, 768)
+
+        # self.tabWidget =QTabWidget(self)  # ç”Ÿæˆçš„ Tab Wighte
+        # # self.tabWidget.setGeometry(QtCore.QRect(40, 60, 281, 161))
+        # self.tabWidget.setLayoutDirection(Qt.LeftToRight)
+        # self.tabWidget.setObjectName("tabWidget")
+        # self.tab = QWidget()  # ç¬¬ä¸€ä¸ª tab æ ‡ç­¾æŒ‰é’®
+        # self.tab.setObjectName("tab")
+        # # self.textEdit_1 = QtWidgets.QTextEdit(self.tab)  # ç¬¬ä¸€ä¸ª Edit Text
+        # # self.textEdit_1.setGeometry(QtCore.QRect(80, 30, 104, 71))
+        # # self.textEdit_1.setObjectName("textEdit_1")
+        # self.tabWidget.addTab(self.tab, "")
+        # self.tab_2 = QWidget("tab_2")  # ç¬¬2ä¸ª tab æ ‡ç­¾æŒ‰é’®
+        # # self.textEdit_2 = QtWidgets.QTextEdit(self.tab_2)  # ç¬¬2ä¸ª Edit Text
+        # # self.textEdit_2.setGeometry(QtCore.QRect(70, 40, 104, 71))
+        # # self.textEdit_2.setObjectName("textEdit_2")
+        # self.tabWidget.addTab(self.tab_2, "")
+
         self.hcam = None
         self.timer = QTimer(self)
         self.imgWidth = 0
@@ -48,8 +60,7 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         self.serial_port.readyRead.connect(self.receive_data)
         self.serial_port.errorOccurred.connect(self.handle_error)
 
-        #·Ö±æÂÊui
-        gbox_res = QGroupBox("Resolution")
+        gbox_res = QGroupBox("åˆ†è¾¨ç‡")
         self.cmb_res = QComboBox()
         self.cmb_res.setEnabled(False)
         vlyt_res = QVBoxLayout()
@@ -57,19 +68,16 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         gbox_res.setLayout(vlyt_res)
         self.cmb_res.currentIndexChanged.connect(self.onResolutionChanged)
 
-        #ÆØ¹âÖµui
-        ##Ë®Æ½²¼¾Ö
-        gbox_exp = QGroupBox("Exposure")
+        gbox_exp = QGroupBox("æ›å…‰")
         self.cbox_auto = QCheckBox()
         self.cbox_auto.setEnabled(False)
-        lbl_auto = QLabel("Auto exposure")
+        lbl_auto = QLabel("è‡ªåŠ¨æ›å…‰")
         hlyt_auto = QHBoxLayout()
         hlyt_auto.addWidget(self.cbox_auto)
         hlyt_auto.addWidget(lbl_auto)
-        hlyt_auto.addStretch()#²¼¾Ö³äÂúµÄÇé¿öÏÂÌí¼ÓÉìËõÁ¿
-        ##×İÏò²¼¾Ö
-        lbl_time = QLabel("Time(us):")
-        lbl_gain = QLabel("Gain(%):")
+        hlyt_auto.addStretch()
+        lbl_time = QLabel("æ—¶é—´(us):")
+        lbl_gain = QLabel("å¢ç›Š(%):")
         self.lbl_expoTime = QLabel("0")
         self.lbl_expoGain = QLabel("0")
         self.slider_expoTime = QSlider(Qt.Horizontal)
@@ -80,17 +88,16 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         vlyt_exp.addLayout(hlyt_auto)
         vlyt_exp.addLayout(self.makeLayout(lbl_time, self.slider_expoTime, self.lbl_expoTime, lbl_gain, self.slider_expoGain, self.lbl_expoGain))
         gbox_exp.setLayout(vlyt_exp)
-        self.cbox_auto.stateChanged.connect(self.onAutoExpo)#Á¬½Ó×Ô¶¯ÆØ¹â²Û
-        self.slider_expoTime.valueChanged.connect(self.onExpoTime)#Á¬½ÓÑÓ³ÙÖµ»¬Ìõ²Û
-        self.slider_expoGain.valueChanged.connect(self.onExpoGain)#Á¬½Ó»Ò¶ÈÖµ»¬Ìõ²Û
+        self.cbox_auto.stateChanged.connect(self.onAutoExpo)
+        self.slider_expoTime.valueChanged.connect(self.onExpoTime)
+        self.slider_expoGain.valueChanged.connect(self.onExpoGain)
 
-        #É«ÎÂÉ«µ÷ui
-        gbox_wb = QGroupBox("White balance")
-        self.btn_autoWB = QPushButton("White balance")
+        gbox_wb = QGroupBox("ç™½å¹³è¡¡")
+        self.btn_autoWB = QPushButton("ç™½å¹³è¡¡")
         self.btn_autoWB.setEnabled(False)
-        self.btn_autoWB.clicked.connect(self.onAutoWB)#Á¬½Ó×Ô¶¯°×Æ½ºâ²Û
-        lbl_temp = QLabel("Temperature:")
-        lbl_tint = QLabel("Tint:")
+        self.btn_autoWB.clicked.connect(self.onAutoWB)
+        lbl_temp = QLabel("è‰²æ¸©:")
+        lbl_tint = QLabel("è‰²è°ƒ:")
         self.lbl_temp = QLabel(str(nncam.NNCAM_TEMP_DEF))
         self.lbl_tint = QLabel(str(nncam.NNCAM_TINT_DEF))
         self.slider_temp = QSlider(Qt.Horizontal)
@@ -105,82 +112,62 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         vlyt_wb.addLayout(self.makeLayout(lbl_temp, self.slider_temp, self.lbl_temp, lbl_tint, self.slider_tint, self.lbl_tint))
         vlyt_wb.addWidget(self.btn_autoWB)
         gbox_wb.setLayout(vlyt_wb)
-        self.slider_temp.valueChanged.connect(self.onWBTemp)#Á¬½ÓÉ«ÎÂÖµ»¬Ìõ²Û
-        self.slider_tint.valueChanged.connect(self.onWBTint)#Á¬½ÓÉ«µ÷Öµ»¬Ìõ²Û
+        self.slider_temp.valueChanged.connect(self.onWBTemp)
+        self.slider_tint.valueChanged.connect(self.onWBTint)
 
-        #Á¬½ÓÏà»ú°´Å¥
-        self.btn_open = QPushButton("Open")
-        self.btn_open.clicked.connect(self.onBtnOpen)#Á¬½Ó°´Å¥²Û
-        #À­È¡¾²Ì¬Í¼Æ¬°´Å¥
+        self.btn_open = QPushButton("æ‰“å¼€ç›¸æœº")
+        self.btn_open.clicked.connect(self.onBtnOpen)
         self.btn_snap = QPushButton("Snap")
         self.btn_snap.setEnabled(False)
-        self.btn_snap.clicked.connect(self.onBtnSnap)#Á¬½Ó°´Å¥²Û
+        self.btn_snap.clicked.connect(self.onBtnSnap)
 
-        # Ìí¼Ó´®¿ÚÏà¹Ø×é¼şµ½²¼¾Ö
-        # gbox_serial = QGroupBox("Serial Port")
+        # ä¸²å£è¿æ¥æŒ‰é’®
+        self.btn_connect = QPushButton("ä¸²å£è¿æ¥")
+        self.btn_connect.clicked.connect(self.onBtnConnect)  # è¿æ¥æŒ‰é’®æ§½
 
-        self.btn_connect = QPushButton("Connect")
-        self.btn_connect.clicked.connect(self.onBtnConnect)
-
-        self.port_combo_box = QComboBox(self)
+        self.port_combo_box = QComboBox()
         self.refresh_port_list()
 
         self.receive_text = QTextEdit()
         self.receive_text.setReadOnly(True)
 
-        self.btn_660 = QPushButton("660")
-        self.btn_730 = QPushButton("730")
-        self.btn_800 = QPushButton("800")
-
-        self.btn_850 = QPushButton("850")
-        self.btn_940 = QPushButton("940")
-        self.btn_1000 = QPushButton("1000")
-
-        self.btn_xuanzhuan = QPushButton("turn")
-
-        hlyt_serial0 = QHBoxLayout()#ºá
-        hlyt_serial0.addWidget(self.port_combo_box)
-        hlyt_serial0.addWidget(self.btn_connect)
-
-        hlyt_serial1 = QHBoxLayout()#ºá
-        hlyt_serial1.addWidget(self.btn_660)
-        hlyt_serial1.addWidget(self.btn_730)
-        hlyt_serial1.addWidget(self.btn_800)
-
-        hlyt_serial2 = QHBoxLayout()#ºá
-        hlyt_serial2.addWidget(self.btn_850)
-        hlyt_serial2.addWidget(self.btn_940)
-        hlyt_serial2.addWidget(self.btn_1000)
-
-        vlyt_serial1 = QVBoxLayout()#×İ
-        vlyt_serial1.addWidget(self.receive_text)
-        vlyt_serial1.addLayout(hlyt_serial0)
-        vlyt_serial1.addLayout(hlyt_serial1)
-        vlyt_serial1.addLayout(hlyt_serial2)
-        vlyt_serial1.addWidget(self.btn_xuanzhuan)
-
-        vlyt_serial1.addStretch()
-
-
-
-        #Çı¶¯¿ØÖÆui
-        # vlyt_driver_ctrl = QVBoxLayout()
-        # vlyt_driver_ctrl.addWidget(vlyt_serial1)
-        wg_driver_ctrl = QWidget()
-        wg_driver_ctrl.setLayout(vlyt_serial1)
-
-        #½«Ïà»ú×é¼şui°´Ë³Ğò×°Èë×İÏò²¼¾Ö
         vlyt_ctrl = QVBoxLayout()
         vlyt_ctrl.addWidget(gbox_res)
         vlyt_ctrl.addWidget(gbox_exp)
         vlyt_ctrl.addWidget(gbox_wb)
         vlyt_ctrl.addWidget(self.btn_open)
         vlyt_ctrl.addWidget(self.btn_snap)
+        vlyt_ctrl.addWidget(self.port_combo_box)
+        vlyt_ctrl.addWidget(self.btn_connect)
         vlyt_ctrl.addStretch()
         wg_ctrl = QWidget()
         wg_ctrl.setLayout(vlyt_ctrl)
 
-        #Í¼Ïñui
+
+        # æ·»åŠ é‡‡é›†å’Œæ£€æµ‹åˆ°å¸ƒå±€
+        MutiImg = QGroupBox("å¤šå…‰è°±å›¾åƒé‡‡é›†")
+        self.caiji = QPushButton("å¼€å§‹é‡‡é›†")
+        self.receive_text = QTextBrowser()
+        vlyt_muti = QVBoxLayout()
+        vlyt_muti.addWidget(self.caiji)
+        vlyt_muti.addWidget(self.receive_text)
+        MutiImg.setLayout(vlyt_muti)
+        self.caiji.clicked.connect(self.caiji_send)  # æ·»åŠ é‡‡é›†æŒ‰é’®æ§½
+
+        Detection = QGroupBox("éšæ€§æŸä¼¤æ£€æµ‹")
+        self.jiance = QPushButton("å¼€å§‹æ£€æµ‹")
+        self.jiance_Browser = QTextBrowser()
+        vlyt_jiance = QVBoxLayout()
+        vlyt_jiance.addWidget(self.jiance)
+        vlyt_jiance.addWidget(self.jiance_Browser)
+        Detection.setLayout(vlyt_jiance)
+        # ä¸­é—´ui
+        vlyt_detect = QVBoxLayout()
+        vlyt_detect.addWidget(MutiImg)
+        vlyt_detect.addWidget(Detection)
+        wg_detect = QWidget()
+        wg_detect.setLayout(vlyt_detect)
+
         self.lbl_frame = QLabel()
         self.lbl_video = QLabel()
         vlyt_show = QVBoxLayout()
@@ -189,43 +176,33 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         wg_show = QWidget()
         wg_show.setLayout(vlyt_show)
 
-        #Õ¤¸ñ×°ÔØ¿ØÖÆuiºÍÍ¼Ïñui
         grid_main = QGridLayout()
-        grid_main.setColumnStretch(0, 2)
-        grid_main.setColumnStretch(2, 3)
-        grid_main.setColumnStretch(3, 5)
+        grid_main.setColumnStretch(0, 1)
+        grid_main.setColumnStretch(1, 4)
+        grid_main.setColumnStretch(2, 4)
         grid_main.addWidget(wg_ctrl)
-        grid_main.addWidget(wg_driver_ctrl)
+        grid_main.addWidget(wg_detect)
         grid_main.addWidget(wg_show)
 
         w_main = QWidget()
         w_main.setLayout(grid_main)
         self.setCentralWidget(w_main)
 
-        self.timer.timeout.connect(self.onTimer)#Á¬½ÓÏà»ú³¬Ê±²Ûº¯Êı
-        self.evtCallback.connect(self.onevtCallback)#Á¬½ÓÏà»úÄÚ²¿ĞÅºÅËù¶ÔÓ¦µÄÏàÓ¦²Û
+        self.timer.timeout.connect(self.onTimer)
+        self.evtCallback.connect(self.onevtCallback)
 
-    def onTimer(self):#³¬Ê±
+    def onTimer(self):
         if self.hcam:
             nFrame, nTime, nTotalFrame = self.hcam.get_FrameRate()
             self.lbl_frame.setText("{}, fps = {:.1f}".format(nTotalFrame, nFrame * 1000.0 / nTime))
 
-# #ÉèÖÃ´®¿Ú
-#     def init_port(self, port:QSerialPort):
-#         port.setBaudRate(QSerialPort.BaudRate.Baud115200)
-#         port.setDataBits(QSerialPort.DataBits.Data8)
-#         port.setParity(QSerialPort.Parity.NoParity)
-#         port.setStopBits(QSerialPort.StopBits.OneStop)
-#         # port.readyRead.connect(recv_data)
-
-#¹Ø±ÕÏñ»ú
     def closeCamera(self):
         if self.hcam:
             self.hcam.Close()
         self.hcam = None
         self.pData = None
 
-        self.btn_open.setText("Open")
+        self.btn_open.setText("æ‰“å¼€ç›¸æœº")
         self.timer.stop()
         self.lbl_frame.clear()
         self.cbox_auto.setEnabled(False)
@@ -240,9 +217,8 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
 
     def closeEvent(self, event):
         self.closeCamera()
-##
 
-    def onResolutionChanged(self, index):#¸ü¸ÄÉè±¸ĞòºÅ
+    def onResolutionChanged(self, index):
         if self.hcam: #step 1: stop camera
             self.hcam.Stop()
 
@@ -254,28 +230,25 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
             self.hcam.put_eSize(self.res)
             self.startCamera()
 
-#ÆØ¹â
-    def onAutoExpo(self, state):#×Ô¶¯ÆØ¹â
+    def onAutoExpo(self, state):
         if self.hcam:
             self.hcam.put_AutoExpoEnable(1 if state else 0)
             self.slider_expoTime.setEnabled(not state)
             self.slider_expoGain.setEnabled(not state)
 
-    def onExpoTime(self, value):#ÆØ¹âÊ±¼ä
+    def onExpoTime(self, value):
         if self.hcam:
             self.lbl_expoTime.setText(str(value))
             if not self.cbox_auto.isChecked():
                 self.hcam.put_ExpoTime(value)
 
-    def onExpoGain(self, value):#ÆØ¹â»Ò¶ÈÖµ
+    def onExpoGain(self, value):
         if self.hcam:
             self.lbl_expoGain.setText(str(value))
             if not self.cbox_auto.isChecked():
                 self.hcam.put_ExpoAGain(value)
-##
 
-#°×Æ½ºâ
-    def onAutoWB(self):#×Ô¶¯°×Æ½ºâ
+    def onAutoWB(self):
         if self.hcam:
             self.hcam.AwbOnce()
 
@@ -283,20 +256,18 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         self.slider_temp.setValue(nTemp)
         self.slider_tint.setValue(nTint)
 
-    def onWBTemp(self, value):#µ÷ÕûÉ«ÎÂ
+    def onWBTemp(self, value):
         if self.hcam:
             self.temp = value
             self.hcam.put_TempTint(self.temp, self.tint)
             self.lbl_temp.setText(str(value))
 
-    def onWBTint(self, value):#µ÷ÕûÉ«µ÷
+    def onWBTint(self, value):
         if self.hcam:
             self.tint = value
             self.hcam.put_TempTint(self.temp, self.tint)
             self.lbl_tint.setText(str(value))
-##
 
-#´ò¿ªÏñ»ú onBtnOpen -> openCamera -> startCamera(sdk)
     def startCamera(self):
         self.pData = bytes(nncam.TDIBWIDTHBYTES(self.imgWidth * 24) * self.imgHeight)
         uimin, uimax, uidef = self.hcam.get_ExpTimeRange()
@@ -319,7 +290,7 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
             self.btn_autoWB.setEnabled(True)
             self.slider_temp.setEnabled(self.cur.model.flag & nncam.NNCAM_FLAG_MONO == 0)
             self.slider_tint.setEnabled(self.cur.model.flag & nncam.NNCAM_FLAG_MONO == 0)
-            self.btn_open.setText("Close")
+            self.btn_open.setText("å…³é—­ç›¸æœº")
             self.btn_snap.setEnabled(True)
             bAuto = self.hcam.get_AutoExpoEnable()
             self.cbox_auto.setChecked(1 == bAuto)
@@ -361,16 +332,14 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
                 if action:
                     self.cur = arr[action.data()]
                     self.openCamera()
-##
 
-#À­Ä£Ê½¾²Ì¬×¥ÅÄ
     def onBtnSnap(self):
         if self.hcam:
             if 0 == self.cur.model.still:    # not support still image capture
                 if self.pData is not None:
                     image = QImage(self.pData, self.imgWidth, self.imgHeight, QImage.Format_RGB888)
                     self.count += 1
-                    image.save("pyqt{}.jpg".format(self.count))#¸ü¸Ä±£´æµÄÍ¼Æ¬Ãû
+                    image.save("pyqt{}.jpg".format(self.count))
             else:
                 menu = QMenu()
                 for i in range(0, self.cur.model.still):
@@ -381,9 +350,6 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
                 self.hcam.Snap(action.data())
 
     @staticmethod
-##
-
-#startCameraÊ±´«µİ¸Ãº¯Êı nncam.dll/soÖĞµÄÏìÓ¦»áµ÷ÓÃqt.pyÖĞµÄeventCallBackº¯Êı·¢³öĞÅºÅ
     def eventCallBack(nEvent, self):
         '''callbacks come from nncam.dll/so internal threads, so we use qt signal to post this event to the UI thread'''
         self.evtCallback.emit(nEvent)
@@ -391,18 +357,18 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
     def onevtCallback(self, nEvent):
         '''this run in the UI thread'''
         if self.hcam:
-            if nncam.NNCAM_EVENT_IMAGE == nEvent:#ÊÓÆµÍ¼ÏñÊı¾İµ½´ï(ÊÓÆµ). Ê¹ÓÃNncam_PullImageXXXX¡°À­¡±Í¼ÏñÊı¾İ
+            if nncam.NNCAM_EVENT_IMAGE == nEvent:
                 self.handleImageEvent()
-            elif nncam.NNCAM_EVENT_EXPOSURE == nEvent:#ÆØ¹âÊ±¼ä·¢Éú¸Ä±ä
+            elif nncam.NNCAM_EVENT_EXPOSURE == nEvent:
                 self.handleExpoEvent()
-            elif nncam.NNCAM_EVENT_TEMPTINT == nEvent:#°×Æ½ºâ²ÎÊı·¢Éú¸Ä±ä,Temp/TintÄ£Ê½
+            elif nncam.NNCAM_EVENT_TEMPTINT == nEvent:
                 self.handleTempTintEvent()
-            elif nncam.NNCAM_EVENT_STILLIMAGE == nEvent:#¾²Ì¬Í¼Æ¬Êı¾İµ½´ï(Nncam_Snap»òNncam_SnapNÒı·¢). Ê¹ÓÃNncam_PullImageXXXX¡°À­¡±Í¼ÏñÊı¾İ
+            elif nncam.NNCAM_EVENT_STILLIMAGE == nEvent:
                 self.handleStillImageEvent()
-            elif nncam.NNCAM_EVENT_ERROR == nEvent:#Ò»°ãĞÔ´íÎó, Êı¾İ²É¼¯²»ÄÜ¼ÌĞø
+            elif nncam.NNCAM_EVENT_ERROR == nEvent:
                 self.closeCamera()
                 QMessageBox.warning(self, "Warning", "Generic Error.")
-            elif nncam.NNCAM_EVENT_STILLIMAGE == nEvent:#
+            elif nncam.NNCAM_EVENT_STILLIMAGE == nEvent:
                 self.closeCamera()
                 QMessageBox.warning(self, "Warning", "Camera disconnect.")
 
@@ -452,9 +418,7 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
                     image = QImage(buf, info.width, info.height, QImage.Format_RGB888)
                     self.count += 1
                     image.save("pyqt{}.jpg".format(self.count))
-##
-
-#´®¿Ú
+    # ä¸²å£
     def refresh_port_list(self):
         self.port_combo_box.clear()
         ports = list_ports.comports()
@@ -473,7 +437,7 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
 
     def onBtnConnect(self):
         port_name = self.port_combo_box.currentText()
-        baud_rate = QSerialPort.BaudRate.Baud115200  # ĞŞ¸Ä²¨ÌØÂÊ£¬ÀıÈç QSerialPort.Baud115200
+        baud_rate = QSerialPort.BaudRate.Baud115200  # ä¿®æ”¹æ³¢ç‰¹ç‡ï¼Œä¾‹å¦‚ QSerialPort.Baud115200
 
         if self.serial_port.isOpen():
             self.serial_port.close()
@@ -482,13 +446,18 @@ class MainWindow(QMainWindow):#MainWindow¼Ì³ĞQMainWindow
         self.serial_port.setBaudRate(baud_rate)
 
         if self.serial_port.open(QIODevice.ReadWrite):
-            self.receive_text.append("Serial port {} is open.".format(port_name))
+            self.receive_text.append("{} å·²è¿æ¥ï¼Œå¯ä»¥å¼€å§‹æ£€æµ‹!".format(port_name))
         else:
             self.receive_text.append("Error opening serial port: {}".format(self.serial_port.errorString()))
 
+    def caiji_send(self):
+        if self.serial_port.isOpen():
+            data = str('#2').encode()
+            self.serial_port.write(data)
+            # self.receive_text.append("Sent: {}".format(data.decode()))
+            print(data)
     def recvData(self):
         data = self.serial.readAll()
-##
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
