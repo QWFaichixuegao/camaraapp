@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
         vlyt_muti.addWidget(self.caiji)
         vlyt_muti.addWidget(self.receive_text)
         MutiImg.setLayout(vlyt_muti)
-        # self.caiji.clicked.connect(self.caiji_send)  # 添加采集按钮槽
+        self.caiji.clicked.connect(self.caiji_send)  # 添加采集按钮槽
         Detection = QGroupBox("损伤检测")
         self.jiance = QPushButton("开始检测")
         self.jiance_Browser = QTextBrowser()
@@ -447,10 +447,35 @@ class MainWindow(QMainWindow):
             return
 
     def receive_data(self):
-        data = self.serial_port.readAll().data().decode().strip()
-        if data:
-            print(data)
-            self.receive_text.append("Received: {}".format(data))
+        # # data = self.serial_port.readAll().data().decode().strip()
+        # data = self.serial_port.readAll().data().decode('utf-8')
+        # if data:
+        #     print(data)
+        #     # self.receive_text.append("Received: {}".format(data))
+        byte_data = self.serial_port.readAll().data()
+
+        try:
+            utf8_data = byte_data.decode('GBK').strip()
+            print(utf8_data)
+        except UnicodeDecodeError as e:
+            print("Error decoding GBK-8 data:", e)
+        if "$1" in utf8_data:
+          print("当前采集面：1")
+        elif "660" in utf8_data:
+            print("660nm采集完成")
+        elif "730" in utf8_data:
+            print("730nm采集完成")
+        elif "800" in utf8_data:
+            print("800nm采集完成")
+        elif "850" in utf8_data:
+            print("850nm采集完成")
+        elif "940" in utf8_data:
+            print("940nm采集完成")
+        elif "100" in utf8_data:
+            print("1000nm采集完成")
+
+
+
 
     def onBtnConnect(self):
         port_name = self.port_combo_box.currentText()
@@ -467,10 +492,11 @@ class MainWindow(QMainWindow):
 
     def caiji_send(self):
         if self.serial_port.isOpen():
-            data = str('#2').encode()
+            data = str('#1').encode()
             self.serial_port.write(data)
             # self.receive_text.append("Sent: {}".format(data.decode()))
             print(data)
+
     def recvData(self):
         data = self.serial.readAll()
 

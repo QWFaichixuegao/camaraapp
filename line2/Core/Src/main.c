@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -45,9 +46,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-CONTROL_FLAG control_flag;
 USARTX_HANDLE usart3_handle;
-uint16_t AUTORELOAD = 3000; 
+HANDLE handle;
+uint16_t AUTORELOAD = 2000;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,13 +90,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
-	control_flag.Car_State=STOP;
-	control_flag.LED_State=1;
+	handle.flagstate=RUNL;
+	handle.ledstate=0;
+  ledshow(handle.ledstate);
+	HAL_UART_Receive_DMA(&huart3,usart3_handle.rx_buf,RX_SIZE);
+  __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,60 +108,50 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-			switch(control_flag.Car_State)
+			switch(handle.flagstate)
 		{
+
 			//0
+			case CAIJI:
+      caiji();
+			break;
+
+			//3
+			case STOP:
+        ledshow(0);
+				HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
+				__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
+			break;
+
+			//1
 			case RUNL://Dir_Pin拉高电机左转  EN_Pin拉低使能转动
 				HAL_GPIO_WritePin(Dir_GPIO_Port, Dir_Pin, GPIO_PIN_SET);
 				HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
 				__HAL_TIM_SetAutoreload(&htim2, AUTORELOAD-1);
 				__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, __HAL_TIM_GET_AUTORELOAD(&htim2)/2);//脉冲输出72000000/（72*AUTORELOAD）=2KHZ
-					
-			break;	
-			//1
+			break;
+
+			//2
 			case RUNR://Dir_Pin拉低电机右转  EN_Pin拉低使能转动
 				HAL_GPIO_WritePin(Dir_GPIO_Port, Dir_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
 				__HAL_TIM_SetAutoreload(&htim2, AUTORELOAD-1);
 				__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, __HAL_TIM_GET_AUTORELOAD(&htim2)/2);//脉冲输出72000000/（72*AUTORELOAD）=2KHZ
-					
-			break;	
-			//2
-			case STOP:
-				HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
-				__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
-			break;		
-		}				
-			
-		/***开关灯测试***/
-/***
-		LED_ROW1_Pin 0X01
-		LED_ROW2_Pin 0X02
-		LED_ROW3_Pin 0X04
-		LED_ROW4_Pin 0X08
-		LED_ROW5_Pin 0X10
-		LED_ROW6_Pin 0X20
-		GPIO_PIN_RESET低电平关 GPIO_PIN_SET高电平开
-***/		
-		HAL_GPIO_WritePin(LED_ROW1_GPIO_Port, LED_ROW1_Pin, 0X01&control_flag.LED_State);
-		HAL_GPIO_WritePin(LED_ROW2_GPIO_Port, LED_ROW2_Pin, 0X02&control_flag.LED_State);
-		HAL_GPIO_WritePin(LED_ROW3_GPIO_Port, LED_ROW3_Pin, 0X04&control_flag.LED_State);
-		HAL_GPIO_WritePin(LED_ROW4_GPIO_Port, LED_ROW4_Pin, 0X08&control_flag.LED_State);
-		HAL_GPIO_WritePin(LED_ROW5_GPIO_Port, LED_ROW5_Pin, 0X10&control_flag.LED_State);		
-		HAL_GPIO_WritePin(LED_ROW6_GPIO_Port, LED_ROW6_Pin, 0X20&control_flag.LED_State);
-																																						
-		/***开关灯测试***/
-		
-		/***串口测试***/
-		sprintf((char*)usart3_handle.tx_buf,"123456");
-		for(int i=0;i<strlen((char*)usart3_handle.tx_buf);i++)//循环发送数据
-		{
-			while((USART3->SR&0X40)==0){;}//循环发送,直到发送完毕
-			USART3->DR =usart3_handle.tx_buf[i];
+			break;
 		}
-		/***串口测试***/
-		
-		HAL_Delay(1000);
+
+
+
+//		/***串口测试***/
+//		sprintf((char*)usart3_handle.tx_buf,"123456");
+//		for(int i=0;i<strlen((char*)usart3_handle.tx_buf);i++)//循环发送数据
+//		{
+//			while((USART3->SR&0X40)==0){;}//循环发送,直到发送完毕
+//			USART3->DR =usart3_handle.tx_buf[i];
+//		}
+//		/***串口测试***/
+
+		HAL_Delay(10);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -202,6 +197,91 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void ledshow(uint8_t ledstate)
+{
+/***
+		LED_ROW1_Pin 0X01
+		LED_ROW2_Pin 0X02
+		LED_ROW3_Pin 0X04
+		LED_ROW4_Pin 0X08
+		LED_ROW5_Pin 0X10
+		LED_ROW6_Pin 0X20
+		GPIO_PIN_RESET低电平关 GPIO_PIN_SET高电平开
+***/
+		HAL_GPIO_WritePin(LED_ROW1_GPIO_Port, LED_ROW1_Pin, 0X01&ledstate);
+		HAL_GPIO_WritePin(LED_ROW2_GPIO_Port, LED_ROW2_Pin, 0X02&ledstate);
+		HAL_GPIO_WritePin(LED_ROW3_GPIO_Port, LED_ROW3_Pin, 0X04&ledstate);
+		HAL_GPIO_WritePin(LED_ROW4_GPIO_Port, LED_ROW4_Pin, 0X08&ledstate);
+		HAL_GPIO_WritePin(LED_ROW5_GPIO_Port, LED_ROW5_Pin, 0X10&ledstate);
+		HAL_GPIO_WritePin(LED_ROW6_GPIO_Port, LED_ROW6_Pin, 0X20&ledstate);
+}
+void sendString(const char* str, size_t length)
+{
+
+  HAL_UART_Transmit_DMA(&huart3, (uint8_t*)str, length);
+
+}
+
+
+void caiji(void)
+{
+	char* state ="$1";
+	size_t Lengthmian = strlen(state) + 1;
+
+	char* mian ="660";
+	size_t Lengthled = strlen(mian) + 1;
+
+//暂停电机
+	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
+
+	//当前采集面1
+  sendString("$1", Lengthmian);
+	HAL_Delay(50);
+
+  ledshow(0x01);
+	HAL_Delay(handdelay);
+  sendString("660", Lengthled);
+	HAL_Delay(handdelay);
+
+  ledshow(0x02);
+	HAL_Delay(handdelay);
+  sendString("730", Lengthled);
+	HAL_Delay(handdelay);
+
+  ledshow(0x04);
+	HAL_Delay(handdelay);
+  sendString("800", Lengthled);
+	HAL_Delay(handdelay);
+
+  ledshow(0x08);
+	HAL_Delay(handdelay);
+  sendString("850", Lengthled);
+	HAL_Delay(handdelay);
+
+  ledshow(0x10);
+	HAL_Delay(handdelay);
+  sendString("940", Lengthled);
+	HAL_Delay(handdelay);
+
+  ledshow(0x20);
+	HAL_Delay(handdelay);
+  sendString("100", Lengthled);
+	HAL_Delay(handdelay);
+	ledshow(0);
+	
+	HAL_GPIO_WritePin(Dir_GPIO_Port, Dir_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
+	__HAL_TIM_SetAutoreload(&htim2, AUTORELOAD-1);
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, __HAL_TIM_GET_AUTORELOAD(&htim2)/2);//脉冲输出72000000/（72*AUTORELOAD）=2KHZ
+
+	HAL_Delay(6000);
+	
+	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
+	handle.flagstate = STOP;
+}
+
 
 /* USER CODE END 4 */
 

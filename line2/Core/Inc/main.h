@@ -83,25 +83,36 @@ void Error_Handler(void);
 
 typedef enum
 {
-	RUNL			=0,
-	RUNR			=1,
-	STOP  		=2,
-} CAR_STATE;
+	CAIJI			=0,
+	RUNL			=1,
+	RUNR			=2,
+	STOP  		=3,
+} HANDLE_STATE;
 
-typedef struct
-{
-	uint8_t Car_State;
-	uint8_t LED_State;
-	
-}CONTROL_FLAG;
-extern CONTROL_FLAG control_flag;
-
-#define TX_SIZE  	64
+#define handdelay  3000
 typedef struct {
-	uint8_t   tx_buf[TX_SIZE];
-	uint16_t  tx_len;
+
+	uint8_t flagstate ;
+	uint8_t getdataflag ;
+	uint8_t ledstate;
+	uint16_t	savecount;
+
+}HANDLE;
+extern HANDLE handle;
+#define tX_SIZE     8
+#define RX_SIZE     8
+#define SAVE_SIZE   8
+typedef struct {
+	uint16_t  rx_count;
+	uint16_t  rx_len;
+	uint8_t   save_buf[SAVE_SIZE];
+	uint8_t   rx_buf[RX_SIZE];
+	uint8_t   tx_buf[tX_SIZE];
 }USARTX_HANDLE;
 extern USARTX_HANDLE usart3_handle;
+
+void ledshow(uint8_t ledstate);
+void caiji(void);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
