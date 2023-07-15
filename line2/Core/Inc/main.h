@@ -89,7 +89,8 @@ typedef enum
 	STOP  		=3,
 } HANDLE_STATE;
 
-#define handdelay  3000
+#define handdelay     3000
+#define ledopendelay  2000
 typedef struct {
 
 	uint8_t flagstate ;
@@ -113,6 +114,7 @@ extern USARTX_HANDLE usart3_handle;
 
 void ledshow(uint8_t ledstate);
 void caiji(void);
+void line_snap(size_t bochang_msg);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -208,6 +208,13 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.onTimer)
         self.evtCallback.connect(self.onevtCallback)
 
+        # 全局变量
+        self.g_sam_num     = 0
+        self.g_aspect_num  = 0
+        self.g_bochang_num = 0
+
+
+
     def onTimer(self):
         if self.hcam:
             nFrame, nTime, nTotalFrame = self.hcam.get_FrameRate()
@@ -357,14 +364,17 @@ class MainWindow(QMainWindow):
                     image = QImage(self.pData, self.imgWidth, self.imgHeight, QImage.Format_RGB888)
                     self.count += 1
                     image.save("pyqt{}.jpg".format(self.count))
+                    print(0)
             else:
-                menu = QMenu()
-                for i in range(0, self.cur.model.still):
-                    action = QAction("{}*{}".format(self.cur.model.res[i].width, self.cur.model.res[i].height), self)
-                    action.setData(i)
-                    menu.addAction(action)
-                action = menu.exec(self.mapToGlobal(self.btn_snap.pos()))
-                self.hcam.Snap(action.data())
+                # menu = QMenu()
+                # for i in range(0, self.cur.model.still):
+                #     action = QAction("{}*{}".format(self.cur.model.res[i].width, self.cur.model.res[i].height), self)
+                #     action.setData(i)
+                #     menu.addAction(action)
+                # action = menu.exec(self.mapToGlobal(self.btn_snap.pos()))
+                self.hcam.Snap(0)#0为3840*2160 1为1920*1080
+                # print(action.data())
+
 
     @staticmethod
     def eventCallBack(nEvent, self):
@@ -433,8 +443,7 @@ class MainWindow(QMainWindow):
                     pass
                 else:
                     image = QImage(buf, info.width, info.height, QImage.Format_RGB888)
-                    self.count += 1
-                    image.save("pyqt{}.jpg".format(self.count))
+                    image.save("{}-{}-{}.jpg".format(self.g_sam_num, self.g_aspect_num, self.g_bochang_num))
     # 串口
     def refresh_port_list(self):
         self.port_combo_box.clear()
@@ -446,33 +455,61 @@ class MainWindow(QMainWindow):
         if error == QSerialPort.NoError:
             return
 
-    def receive_data(self):
+    def receive_data(self): #接收处理
         # # data = self.serial_port.readAll().data().decode().strip()
         # data = self.serial_port.readAll().data().decode('utf-8')
         # if data:
         #     print(data)
         #     # self.receive_text.append("Received: {}".format(data))
         byte_data = self.serial_port.readAll().data()
-
         try:
             utf8_data = byte_data.decode('GBK').strip()
             print(utf8_data)
         except UnicodeDecodeError as e:
             print("Error decoding GBK-8 data:", e)
+
         if "$1" in utf8_data:
-          print("当前采集面：1")
+            self.g_sam_num    = self.g_sam_num+1
+            self.g_aspect_num = 1
+            self.receive_text.append("当前采集面：1")
+
+        elif "$2" in utf8_data:
+            self.g_aspect_num = 2
+            self.receive_text.append("当前采集面：2")
+
+        elif "$3" in utf8_data:
+            self.g_aspect_num = 3
+            self.receive_text.append("当前采集面：3")
+
         elif "660" in utf8_data:
-            print("660nm采集完成")
+            self.g_bochang_num = 1
+            self.onBtnSnap()
+            self.receive_text.append("660nm采集完成")
+
         elif "730" in utf8_data:
-            print("730nm采集完成")
+            self.g_bochang_num = 2
+            self.onBtnSnap()
+            self.receive_text.append("730nm采集完成")
+
         elif "800" in utf8_data:
-            print("800nm采集完成")
+            self.g_bochang_num = 3
+            self.onBtnSnap()
+            self.receive_text.append("800nm采集完成")
+
         elif "850" in utf8_data:
-            print("850nm采集完成")
+            self.g_bochang_num = 4
+            self.onBtnSnap()
+            self.receive_text.append("850nm采集完成")
+
         elif "940" in utf8_data:
-            print("940nm采集完成")
+            self.g_bochang_num = 5
+            self.onBtnSnap()
+            self.receive_text.append("940nm采集完成")
+
         elif "100" in utf8_data:
-            print("1000nm采集完成")
+            self.g_bochang_num = 6
+            self.onBtnSnap()
+            self.receive_text.append("1000nm采集完成")
 
 
 
@@ -489,6 +526,10 @@ class MainWindow(QMainWindow):
 
         if self.serial_port.open(QIODevice.ReadWrite):
             self.btn_connect.setEnabled(False)
+
+        if self.serial_port.isOpen():
+            data = str('#2').encode()
+            self.serial_port.write(data)
 
     def caiji_send(self):
         if self.serial_port.isOpen():

@@ -235,15 +235,15 @@ void DMA1_Channel3_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-	if((__HAL_UART_GET_FLAG(&huart3,UART_FLAG_IDLE) != RESET))  
-		{		
-			__HAL_UART_CLEAR_IDLEFLAG(&huart3); 
-			HAL_UART_DMAStop(&huart3);  
+	if((__HAL_UART_GET_FLAG(&huart3,UART_FLAG_IDLE) != RESET))
+		{
+			__HAL_UART_CLEAR_IDLEFLAG(&huart3);
+			HAL_UART_DMAStop(&huart3);
 			usart3_handle.rx_count  = __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
-			usart3_handle.rx_len =  RX_SIZE - usart3_handle.rx_count; 
+			usart3_handle.rx_len =  RX_SIZE - usart3_handle.rx_count;
 			memcpy(usart3_handle.save_buf,usart3_handle.rx_buf,usart3_handle.rx_len);
 			memset(usart3_handle.rx_buf,0,RX_SIZE);
-			HAL_UART_Receive_DMA(&huart3,usart3_handle.rx_buf,RX_SIZE);  
+			HAL_UART_Receive_DMA(&huart3,usart3_handle.rx_buf,RX_SIZE);
 			if(strstr((char*)usart3_handle.save_buf[0],"#") == NULL)
 			{
 				handle.getdataflag = usart3_handle.save_buf[1];//[0]:$ [1]:1~4
@@ -252,19 +252,19 @@ void USART3_IRQHandler(void)
 					case '1':
 						handle.flagstate = CAIJI;
 					break;
-//					
-//					case '2':   
-//						handle.flagstate=SEND;
-//					break;
-//					
+
+					case '2':
+						handle.flagstate = STOP;
+					break;
+//
 //					case '3':
 //						handle.flagstate=CLEAN;
 //					break;
-//					
+//
 //					case '4':
 //						handle.flagstate=STOP;
-//					break;	
-				}				
+//					break;
+				}
 			}
 		}
 

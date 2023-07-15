@@ -48,7 +48,7 @@
 /* USER CODE BEGIN PV */
 USARTX_HANDLE usart3_handle;
 HANDLE handle;
-uint16_t AUTORELOAD = 2000;
+uint16_t AUTORELOAD = 1000;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -231,55 +231,70 @@ void caiji(void)
 	char* mian ="660";
 	size_t Lengthled = strlen(mian) + 1;
 
-//暂停电机
+	//暂停电机
 	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
 	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
 
 	//当前采集面1
   sendString("$1", Lengthmian);
 	HAL_Delay(50);
+  line_snap(Lengthled);
 
+	//当前采集面2
+  sendString("$2", Lengthmian);
+	HAL_Delay(50);
+  line_snap(Lengthled);
+
+	//当前采集面3
+  sendString("$3", Lengthmian);
+	HAL_Delay(50);
+  line_snap(Lengthled);
+
+	handle.flagstate = STOP;
+}
+
+void line_snap(size_t bochang_msg)
+{
   ledshow(0x01);
-	HAL_Delay(handdelay);
-  sendString("660", Lengthled);
+	HAL_Delay(ledopendelay);
+  sendString("660", bochang_msg);
 	HAL_Delay(handdelay);
 
   ledshow(0x02);
-	HAL_Delay(handdelay);
-  sendString("730", Lengthled);
+	HAL_Delay(ledopendelay);
+  sendString("730", bochang_msg);
 	HAL_Delay(handdelay);
 
   ledshow(0x04);
-	HAL_Delay(handdelay);
-  sendString("800", Lengthled);
+	HAL_Delay(ledopendelay);
+  sendString("800", bochang_msg);
 	HAL_Delay(handdelay);
 
   ledshow(0x08);
-	HAL_Delay(handdelay);
-  sendString("850", Lengthled);
+	HAL_Delay(ledopendelay);
+  sendString("850", bochang_msg);
 	HAL_Delay(handdelay);
 
   ledshow(0x10);
-	HAL_Delay(handdelay);
-  sendString("940", Lengthled);
+	HAL_Delay(ledopendelay);
+  sendString("940", bochang_msg);
 	HAL_Delay(handdelay);
 
   ledshow(0x20);
+	HAL_Delay(ledopendelay);
+  sendString("100", bochang_msg);
 	HAL_Delay(handdelay);
-  sendString("100", Lengthled);
-	HAL_Delay(handdelay);
+
+	//关闭灯光旋转1/3
 	ledshow(0);
-	
 	HAL_GPIO_WritePin(Dir_GPIO_Port, Dir_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
 	__HAL_TIM_SetAutoreload(&htim2, AUTORELOAD-1);
 	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, __HAL_TIM_GET_AUTORELOAD(&htim2)/2);//脉冲输出72000000/（72*AUTORELOAD）=2KHZ
-
 	HAL_Delay(6000);
-	
+	//旋转1/3后暂停，等待下一轮操作
 	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
 	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
-	handle.flagstate = STOP;
 }
 
 
