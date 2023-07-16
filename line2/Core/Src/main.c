@@ -97,7 +97,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
 	handle.flagstate=RUNL;
-	handle.ledstate=0;
+	handle.ledstate=0X00;
   ledshow(handle.ledstate);
 	HAL_UART_Receive_DMA(&huart3,usart3_handle.rx_buf,RX_SIZE);
   __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);
@@ -118,7 +118,7 @@ int main(void)
 
 			//3
 			case STOP:
-        ledshow(0);
+        ledshow(handle.ledstate);
 				HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
 				__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
 			break;
@@ -249,6 +249,8 @@ void caiji(void)
   sendString("$3", Lengthmian);
 	HAL_Delay(50);
   line_snap(Lengthled);
+	
+	handle.ledstate=0X00;
 
 	handle.flagstate = STOP;
 }
@@ -291,7 +293,7 @@ void line_snap(size_t bochang_msg)
 	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
 	__HAL_TIM_SetAutoreload(&htim2, AUTORELOAD-1);
 	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, __HAL_TIM_GET_AUTORELOAD(&htim2)/2);//脉冲输出72000000/（72*AUTORELOAD）=2KHZ
-	HAL_Delay(6000);
+	HAL_Delay(4000);
 	//旋转1/3后暂停，等待下一轮操作
 	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
 	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 0);
